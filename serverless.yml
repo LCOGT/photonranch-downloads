@@ -1,0 +1,55 @@
+service: zip-downloads
+app: photonranch
+org: photonadmin
+
+frameworkVersion: '2'
+
+# include node package dependencies
+custom:
+  webpack:
+    includeModules:
+      packagePath: './package.json'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  lambdaHashingVersion: 20201221
+
+# you can overwrite defaults here
+#  stage: dev
+#  region: us-east-1
+
+  iam:
+    role:
+      name: zip-downloads-default-iam-role
+      statements:
+      - Effect: Allow
+        Action:
+          - s3:GetBucketNotification
+          - s3:PutBucketNotification
+          - s3:ListBucket
+          - s3:DeleteObject
+          - s3:GetObject  
+          - s3:PutObject
+        Resource: 
+          - "arn:aws:s3:::${self:provider.environment.BUCKET_NAME}"
+          - "arn:aws:s3:::${self:provider.environment.BUCKET_NAME}/*"
+
+# you can define service wide environment variables here
+  environment:
+    BUCKET_NAME: "photonranch-001"
+    URL_EXPIRE_TIME: 300
+
+# you can add packaging information here
+#package:
+#  patterns:
+#    - '!exclude-me.js'
+#    - '!exclude-me-dir/**'
+#    - include-me.js
+#    - include-me-dir/**
+
+functions:
+  zip:
+    handler: handler.getZipSignedUrl
+    memorySize: 1024 
+    timeout: 900
